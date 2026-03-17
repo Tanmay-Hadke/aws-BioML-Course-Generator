@@ -1,0 +1,41 @@
+{
+  "Comment": "BioML MLOps Pipeline with Automated Testing",
+  "StartAt": "CallAgent1Planner",
+  "States": {
+    "CallAgent1Planner": {
+      "Type": "Task",
+      "Resource": "YOUR_ARN_1",
+      "Next": "CallAgent2Writer"
+    },
+    "CallAgent2Writer": {
+      "Type": "Task",
+      "Resource": "YOUR_ARN_2",
+      "Next": "CallAgent3Coder"
+    },
+    "CallAgent3Coder": {
+      "Type": "Task",
+      "Resource": "YOUR_ARN_3",
+      "Next": "CallAgent4Validator"
+    },
+    "CallAgent4Validator": {
+      "Type": "Task",
+      "Resource": "YOUR_ARN_4",
+      "Next": "SaveToDynamoDB"
+    },
+    "SaveToDynamoDB": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "BioML-Courses",
+        "Item": {
+          "course_id": { "S.$": "$$.Execution.Name" },
+          "topic": { "S.$": "$.course_topic" },
+          "lecture_notes": { "S.$": "$.lecture_notes" },
+          "code_snippet": { "S.$": "$.code_snippet" },
+          "code_status": { "S.$": "$.test_result" } 
+        }
+      },
+      "End": true
+    }
+  }
+}

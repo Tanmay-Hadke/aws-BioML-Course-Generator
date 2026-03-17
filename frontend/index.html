@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioML MLOps Control Center</title>
+    <style>
+        :root { 
+            --primary: #2563eb; 
+            --success: #16a34a; 
+            --warning: #dc2626;
+            --bg: #f8fafc; 
+            --text: #1e293b; 
+            --border: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.5;
+        }
+        
+        .container { max-width: 1300px; margin: 0 auto; }
+
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin: 0; color: var(--primary); font-size: 2rem; }
+        .subtitle { color: #64748b; margin-top: 5px; font-weight: 500; }
+
+        /* MLOps Control Panel */
+        .controls { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+            align-items: end; 
+            margin-bottom: 30px; 
+            border: 1px solid var(--border);
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 0.85rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+        
+        input, select { 
+            padding: 12px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 14px;
+            outline-color: var(--primary);
+        }
+
+        button { 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            color: white;
+        }
+
+        .btn-gen { background: var(--primary); }
+        .btn-gen:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-gen:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .btn-fetch { background: var(--success); }
+        .btn-fetch:hover { background: #15803d; transform: translateY(-1px); }
+
+        /* Dashboard Grid System */
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 25px; 
+            display: none; /* Hidden until data is fetched */
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            border-top: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 { margin: 0; font-size: 1.1rem; }
+
+        .content-scroll {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .content-area { 
+            font-size: 15px; 
+            line-height: 1.7; 
+            white-space: pre-wrap; 
+            color: #334155; 
+        }
+
+        pre { 
+            background: #1e293b; 
+            color: #e2e8f0; 
+            padding: 20px; 
+            border-radius: 8px; 
+            font-family: 'Fira Code', monospace; 
+            font-size: 13px; 
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        #status-bar { 
+            margin-top: -15px; 
+            margin-bottom: 20px;
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            text-align: center; 
+            display: none; 
+            font-weight: 600;
+        }
+
+        .success-bg { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .error-bg { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Responsive for mobile */
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🧬 BioML MLOps Control Center</h1>
+        <p class="subtitle">Multi-Agent Orchestration & Automated Code Validation</p>
+    </div>
+
+    <div class="controls">
+        <div class="input-group">
+            <label>Research Topic</label>
+            <input type="text" id="topic" placeholder="e.g. Single-cell RNA Sequencing">
+        </div>
+        <div class="input-group">
+            <label>Target Audience</label>
+            <select id="audience">
+                <option value="Undergraduates">Undergraduates</option>
+                <option value="M.Sc. Bioinformatics" selected>M.Sc. Bioinformatics</option>
+                <option value="PhD Researchers">PhD Researchers</option>
+                <option value="Data Scientists">Data Scientists</option>
+                <option value="ML Engineers">ML Engineers</option>
+            </select>
+        </div>
+        <button class="btn-gen" id="genBtn" onclick="triggerWorkflow()">🚀 Generate</button>
+        
+        <div class="input-group">
+            <label>Active Course ID</label>
+            <input type="text" id="courseIdInput" placeholder="Enter ID to fetch">
+        </div>
+        <button class="btn-fetch" id="fetchBtn" onclick="fetchCourse()">🔍 Retrieve Results</button>
+    </div>
+
+    <div id="status-bar"></div>
+
+    <div class="dashboard-grid" id="courseDisplay">
+        <div class="card">
+            <div class="card-header">
+                <h3>📖 Lead Professor: Syllabus</h3>
+            </div>
+            <div class="content-scroll">
+                <div id="displayNotes" class="content-area"></div>
+            </div>
+        </div>
+
+        <div class="card" style="border-top-color: var(--success);">
+            <div class="card-header">
+                <h3>💻 Lab Instructor: Practical Code</h3>
+                <span id="codeStatusBadge" class="badge"></span>
+            </div>
+            <div class="content-scroll">
+                <pre><code id="displayCode"></code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- AWS ENDPOINT CONFIGURATION ---
+    const TRIGGER_API_URL = "https://615tkl3wgg.execute-api.us-east-1.amazonaws.com/prod/generate-course";
+    const FETCH_API_URL = "https://615tkl3wgg.execute-api.us-east-1.amazonaws.com/prod/get-course";
+
+    const status = document.getElementById('status-bar');
+    const genBtn = document.getElementById('genBtn');
+
+    // --- PHASE 1: TRIGGER AGENTS ---
+    async function triggerWorkflow() {
+        const topic = document.getElementById('topic').value;
+        const audience = document.getElementById('audience').value;
+
+        if(!topic) { alert("Please provide a topic!"); return; }
+
+        genBtn.disabled = true;
+        genBtn.innerText = "⏳ Orchestrating...";
+        status.className = "success-bg";
+        status.style.display = "block";
+        status.innerText = "🚀 Agents 1-3 have been deployed. Building curriculum...";
+
+        try {
+            const res = await fetch(TRIGGER_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ course_topic: topic, target_audience: audience })
+            });
+            
+            const rawText = await res.text();
+            const data = JSON.parse(rawText);
+            const body = typeof data.body === 'string' ? JSON.parse(data.body) : data;
+            
+            const courseId = body.course_id.trim();
+            document.getElementById('courseIdInput').value = courseId;
+            status.innerHTML = `✅ <b>Workflow Triggered!</b> ID: <code>${courseId}</code>. Wait 15s for MLOps validation.`;
+        } catch (e) {
+            status.className = "error-bg";
+            status.innerText = "❌ Connection Failed. Check CORS/API Settings.";
+        } finally {
+            genBtn.disabled = false;
+            genBtn.innerText = "🚀 Generate";
+        }
+    }
+
+    // --- PHASE 2: RETRIEVE & VALIDATE ---
+    async function fetchCourse() {
+        const courseId = document.getElementById('courseIdInput').value.trim();
+        const display = document.getElementById('courseDisplay');
+        const badge = document.getElementById('codeStatusBadge');
+
+        if(!courseId) { alert("Please provide a Course ID!"); return; }
+
+        try {
+            const res = await fetch(FETCH_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ course_id: courseId })
+            });
+
+            const rawText = await res.text();
+            const data = JSON.parse(rawText);
+            const body = typeof data.body === 'string' ? JSON.parse(data.body) : data;
+
+            if (res.ok) {
+                // Populate Syllabus
+                document.getElementById('displayNotes').innerText = body.lecture_notes || "No notes available.";
+                
+                // Populate & Clean Code
+                let cleanCode = (body.code_snippet || "No code generated.").replace(/```python/g, "").replace(/```/g, "").trim();
+                document.getElementById('displayCode').innerText = cleanCode;
+
+                // Handle MLOps Validation Badge
+                const isPassed = body.code_status === "Passed";
+                badge.innerText = isPassed ? "✅ Verified Syntax" : "⚠️ Validation Failed";
+                badge.style.background = isPassed ? "#dcfce7" : "#fee2e2";
+                badge.style.color = isPassed ? "#166534" : "#991b1b";
+
+                display.style.display = "grid";
+                status.style.display = "none";
+            } else {
+                alert("Course ID not found in DynamoDB. The agents might still be working!");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network Error: Could not reach the Fetch API.");
+        }
+    }
+</script>
+
+</body>
+</html>
